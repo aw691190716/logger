@@ -1,178 +1,126 @@
 [![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-Logger-brightgreen.svg?style=flat)](http://android-arsenal.com/details/1/1658) [![](https://img.shields.io/badge/AndroidWeekly-%23147-blue.svg)](http://androidweekly.net/issues/issue-147)
-[![Join the chat at https://gitter.im/orhanobut/logger](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/orhanobut/logger?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/orhanobut/logger](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/orhanobut/logger?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) <a href="http://www.methodscount.com/?lib=com.orhanobut%3Alogger%3A2.0.0"><img src="https://img.shields.io/badge/Methods and size-198 | 18 KB-e91e63.svg"/></a> [![Build Status](https://travis-ci.org/orhanobut/logger.svg?branch=master)](https://travis-ci.org/orhanobut/logger)
 
-<img align="right" src='https://github.com/orhanobut/logger/blob/master/images/logger-logo.png' width='128' height='128'/>
-
-###Logger
-Simple, pretty and powerful logger for android
-
-Logger provides :
-- Thread information
-- Class information
-- Method information
-- Pretty-print for json content
-- Pretty-print for new line "\n"
-- Clean output
-- Jump to source
-
-### Dependency
-https://jitpack.io/#orhanobut/logger/1.12
-
-```groovy
-repositories {
-  // ...
-  maven { url "https://jitpack.io" }
-}
-
-dependencies {
-  compile 'com.github.orhanobut:logger:1.12'
-}
-```
-
-### Current Log system
-```java
-Log.d(TAG,"hello");
-```
-
-<img src='https://github.com/orhanobut/logger/blob/master/images/current-log.png'/>
-
+<img align="right" src='https://github.com/orhanobut/logger/blob/master/art/logger-logo.png' width='128' height='128'/>
 
 ### Logger
-```java
-Logger.d("hello");
-Logger.d("hello %s %d", "world", 5);   // String.format
+Simple, pretty and powerful logger for android
+
+### Setup
+Download
+```groovy
+compile 'com.orhanobut:logger:2.1.1'
 ```
-<img src='https://github.com/orhanobut/logger/blob/master/images/description.png'/>
 
-### Usage
-Note: Because of the latest changes, Logger.init() must be called once to initiate. This will be fixed in the next version
-
+Initialize
+```java
+Logger.addLogAdapter(new AndroidLogAdapter());
+```
+And use
 ```java
 Logger.d("hello");
-Logger.e("hello");
-Logger.w("hello");
-Logger.v("hello");
-Logger.wtf("hello");
+```
+
+### Output
+<img src='https://github.com/orhanobut/logger/blob/master/art/logger_output.png'/>
+
+
+### Options
+```java
+Logger.d("debug");
+Logger.e("error");
+Logger.w("warning");
+Logger.v("verbose");
+Logger.i("information");
+Logger.wtf("wtf!!!!");
+```
+
+String format arguments are supported
+```java
+Logger.d("hello %s", "world");
+```
+
+Collections support (only available for debug logs)
+```java
+Logger.d(MAP);
+Logger.d(SET);
+Logger.d(LIST);
+Logger.d(ARRAY);
+```
+
+Json and Xml support (output will be in debug level)
+```java
 Logger.json(JSON_CONTENT);
 Logger.xml(XML_CONTENT);
 ```
 
-### Change TAG
-All logs
+### Advanced
 ```java
-Logger.init(YOUR_TAG);
-```
-Log based
-```java
-Logger.t("mytag").d("hello");
-```
-<img src='https://github.com/orhanobut/logger/blob/master/images/custom-tag.png'/>
+FormatStrategy formatStrategy = PrettyFormatStrategy.newBuilder()
+  .showThreadInfo(false)  // (Optional) Whether to show thread info or not. Default true
+  .methodCount(0)         // (Optional) How many method line to show. Default 2
+  .methodOffset(7)        // (Optional) Hides internal method calls up to offset. Default 5
+  .logStrategy(customLog) // (Optional) Changes the log strategy to print out. Default LogCat
+  .tag("My custom tag")   // (Optional) Global tag for every log. Default PRETTY_LOGGER
+  .build();
 
-
-### Settings (optional)
-Change the settings with init. This should be called only once. Best place would be in application class. All of them
- are optional.
-```java
-Logger
-  .init(YOUR_TAG)                 // default PRETTYLOGGER or use just init()
-  .methodCount(3)                 // default 2
-  .hideThreadInfo()               // default shown
-  .logLevel(LogLevel.NONE)        // default LogLevel.FULL
-  .methodOffset(2)                // default 0
-  .logTool(new AndroidLogTool()); // custom log tool, optional
-}
-
-```
-Note: Use LogLevel.NONE for the release versions.
-
-### Use another log util instead of android.util.log
-- Implement LogTool
-- set it with init
-```java
-.logTool(new MyCustomLogTool())
+Logger.addLogAdapter(new AndroidLogAdapter(formatStrategy));
 ```
 
-### More log samples
+### Loggable
+Log adapters checks whether the log should be printed out or not by checking this function.
+If you want to disable/hide logs for output, override `isLoggable` method and put the condition.
 ```java
-Logger.d("hello");
-Logger.e(exception, "message");
-Logger.json(JSON_CONTENT);
-```
-<img src='https://github.com/orhanobut/logger/blob/master/images/logger-log.png'/>
-
-### Method info
-Observe the caller methods in the order they are invoked and also thread information.
-```java
-void methodA(){
-   methodB();
-}
-void methodA(){
-   Logger.d("hello");
-}
-```
-Both method information will be shown in the order of invocation.
-
-<img src='https://github.com/orhanobut/logger/blob/master/images/two-method-with-thread-desc.png'/>
-
-### Change method count (Default: 2)
-All logs
-```java
-Logger.init().setMethodCount(1);
-```
-Log based
-```java
-Logger.t(1).d("hello");
+Logger.addLogAdapter(new AndroidLogAdapter() {
+  @Override public boolean isLoggable(int priority, String tag) {
+    return BuildConfig.DEBUG;
+  }
+});
 ```
 
-<img src='https://github.com/orhanobut/logger/blob/master/images/one-method-with-thread.png'/>
-
-### Change method stack offset (Default: 0)
-To integrate logger with other libraries, you can set the offset in order to avoid that library's methods.
+### Save logs to the file
+//TODO: More information will be added later
 ```java
-Logger.init().setMethodOffset(5);
+Logger.addLogAdapter(new DiskLogAdapter());
 ```
 
-### Hide thread information
+Add custom tag to Csv format strategy
 ```java
-Logger.init().setMethodCount(1).hideThreadInfo();
+FormatStrategy formatStrategy = CsvFormatStrategy.newBuilder()
+  .tag("custom")
+  .build();
+  
+Logger.addLogAdapter(new DiskLogAdapter(formatStrategy));
 ```
 
-<img src='https://github.com/orhanobut/logger/blob/master/images/one-method-no-header.png'/>
+### How it works
+<img src='https://github.com/orhanobut/logger/blob/master/art/how_it_works.png'/>
 
-### Only show the message
+
+### More
+- Use the filter for a better result. PRETTY_LOGGER or your custom tag
+- Make sure that wrap option is disabled
+- You can also simplify output by changing settings.
+
+<img src='https://github.com/orhanobut/logger/blob/master/art/logcat_options.png'/>
+
+- Timber Integration
 ```java
-Logger.init().setMethodCount(0).hideThreadInfo();
+// Set methodOffset to 5 in order to hide internal method calls
+Timber.plant(new Timber.DebugTree() {
+  @Override protected void log(int priority, String tag, String message, Throwable t) {
+    Logger.log(priority, tag, message, t);
+  }
+});
 ```
 
-<img src='https://github.com/orhanobut/logger/blob/master/images/just-content.png'/>
+### Breaking changes
+- Initialization is changed. No backward compatibility support. Use `Logger.addLogAdapter`
+- LogLevel is removed. Use the new `isLoggable` approach
 
-### Pretty print json, Logger.json
-Format the json content in a pretty way
-```java
-Logger.json(YOUR_JSON_DATA);
-```
-
-<img src='https://github.com/orhanobut/logger/blob/master/images/json-log.png'/>
-
-### Log exceptions in a simple way
-Show the cause of the exception
-```java
-Logger.e(exception,"message");
-```
-
-### Notes
-- Use the filter for a better result
-
-<img src='https://github.com/orhanobut/logger/blob/master/images/filter.png'/>
-
-- Make sure that the wrap option is disabled
-
-<img src='https://github.com/orhanobut/logger/blob/master/images/wrap-closed.png'/>
-
-
-###License
+### License
 <pre>
-Copyright 2015 Orhan Obut
+Copyright 2017 Orhan Obut
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
